@@ -12,11 +12,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.myapplication.data.ScoreHistoryItem
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @Composable
 fun HistoryScreen(
     historyList: List<ScoreHistoryItem>,
-    onBackClick: () -> Unit = {}
+    onBackClick: () -> Unit = {},
+    onClearHistoryClick: () -> Unit = {}
 ) {
     Column(
         modifier = Modifier
@@ -47,6 +51,23 @@ fun HistoryScreen(
             shape = RoundedCornerShape(18.dp)
         ) {
             Text("Back")
+        }
+
+        if (historyList.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(12.dp))
+
+            OutlinedButton(
+                onClick = onClearHistoryClick,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp),
+                shape = RoundedCornerShape(18.dp),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = MaterialTheme.colorScheme.error
+                )
+            ) {
+                Text("Clear History")
+            }
         }
 
         Spacer(modifier = Modifier.height(20.dp))
@@ -82,6 +103,11 @@ fun HistoryScreen(
                         0
                     }
 
+                    val formattedDate = SimpleDateFormat(
+                        "dd MMM yyyy, HH:mm",
+                        Locale.getDefault()
+                    ).format(Date(item.timestamp))
+
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(22.dp),
@@ -93,7 +119,6 @@ fun HistoryScreen(
                         Column(
                             modifier = Modifier.padding(20.dp)
                         ) {
-
                             Text(
                                 text = item.topic,
                                 style = MaterialTheme.typography.titleMedium,
@@ -114,6 +139,14 @@ fun HistoryScreen(
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
+
+                            Spacer(modifier = Modifier.height(6.dp))
+
+                            Text(
+                                text = formattedDate,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
                         }
                     }
                 }
@@ -121,4 +154,3 @@ fun HistoryScreen(
         }
     }
 }
-

@@ -12,6 +12,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.myapplication.data.ScoreHistoryItem
 import com.example.myapplication.data.ScoreHistoryManager
+import androidx.compose.ui.platform.LocalContext
 
 @Composable
 fun ResultScreen(
@@ -22,14 +23,17 @@ fun ResultScreen(
     onBackToHomeClick: () -> Unit = {},
     onRetryClick: () -> Unit = {}
 ) {
+    val context = LocalContext.current
+
     LaunchedEffect(Unit) {
-        ScoreHistoryManager.history.add(
-            0,
+        ScoreHistoryManager.addResult(
+            context,
             ScoreHistoryItem(
                 score = score,
                 totalQuestions = totalQuestions,
                 topic = topic,
-                difficulty = difficulty
+                difficulty = difficulty,
+                timestamp = System.currentTimeMillis()
             )
         )
     }

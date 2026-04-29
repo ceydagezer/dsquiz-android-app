@@ -1,6 +1,8 @@
 package com.example.myapplication.ui.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -14,6 +16,7 @@ import com.example.myapplication.ui.screens.QuizScreen
 import com.example.myapplication.ui.screens.ResultScreen
 import com.example.myapplication.ui.screens.SettingsScreen
 import com.example.myapplication.ui.screens.TopicSelectionScreen
+import com.example.myapplication.ui.screens.SubtopicSelectionScreen
 
 @Composable
 fun AppNavigation(
@@ -21,6 +24,11 @@ fun AppNavigation(
     onThemeToggle: () -> Unit
 ) {
     val navController = rememberNavController()
+    val context = LocalContext.current
+
+    LaunchedEffect(Unit) {
+        ScoreHistoryManager.loadHistory(context)
+    }
 
     NavHost(
         navController = navController,
@@ -57,11 +65,26 @@ fun AppNavigation(
 
         composable("topic_selection") {
             TopicSelectionScreen(
-                onAlgorithmsClick = {
-                    navController.navigate("difficulty_selection/Algorithms")
+                onTopicClick = { selectedTopic ->
+                    navController.navigate("subtopic_selection/$selectedTopic")
                 },
-                onDataStructuresClick = {
-                    navController.navigate("difficulty_selection/Data Structures")
+                onBackClick = {
+                    navController.popBackStack()
+                }
+            )
+        }
+        composable(
+            route = "subtopic_selection/{category}",
+            arguments = listOf(
+                navArgument("category") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val category = backStackEntry.arguments?.getString("category") ?: "Algorithms"
+
+            SubtopicSelectionScreen(
+                category = category,
+                onSubtopicClick = { selectedSubtopic ->
+                    navController.navigate("difficulty_selection/$selectedSubtopic")
                 },
                 onBackClick = {
                     navController.popBackStack()
@@ -145,10 +168,15 @@ fun AppNavigation(
         }
 
         composable("history") {
+            ScoreHistoryManager.loadHistory(context)
+
             HistoryScreen(
                 historyList = ScoreHistoryManager.history,
                 onBackClick = {
                     navController.popBackStack()
+                },
+                onClearHistoryClick = {
+                    ScoreHistoryManager.clearHistory(context)
                 }
             )
         }

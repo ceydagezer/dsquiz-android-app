@@ -12,14 +12,30 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun TopicSelectionScreen(
-    onTopicClick: (String) -> Unit = {},
+fun SubtopicSelectionScreen(
+    category: String,
+    onSubtopicClick: (String) -> Unit = {},
     onBackClick: () -> Unit = {}
 ) {
-    val topics = listOf(
-        "Algorithms" to "Search, sorting, recursion and logic",
-        "Data Structures" to "Arrays, stacks, queues, trees and graphs"
-    )
+    val subtopics = if (category == "Algorithms") {
+        listOf(
+            "Algorithms" to "All algorithm questions",
+            "Sorting" to "Bubble, selection, insertion and merge sort",
+            "Searching" to "Linear search and binary search",
+            "Recursion" to "Recursive logic and base cases",
+            "Complexity" to "Big-O notation and algorithm analysis"
+        )
+    } else {
+        listOf(
+            "Data Structures" to "All data structure questions",
+            "Arrays" to "Basic array operations and indexing",
+            "Linked Lists" to "Nodes, links and traversal",
+            "Stacks" to "LIFO structure and stack operations",
+            "Queues" to "FIFO structure and queue operations",
+            "Trees" to "Tree basics, traversal and hierarchy",
+            "Graphs" to "Vertices, edges and graph traversal"
+        )
+    }
 
     LazyColumn(
         modifier = Modifier
@@ -32,26 +48,26 @@ fun TopicSelectionScreen(
             Spacer(modifier = Modifier.height(32.dp))
 
             Text(
-                text = "Choose Topic",
+                text = category,
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onBackground
             )
 
             Text(
-                text = "Select a category and start practicing.",
+                text = "Choose a subtopic to practice.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(top = 8.dp, bottom = 18.dp)
             )
         }
 
-        items(topics) { topic ->
+        items(subtopics) { subtopic ->
             SelectionCard(
-                title = topic.first,
-                subtitle = topic.second,
+                title = subtopic.first,
+                subtitle = subtopic.second,
                 onClick = {
-                    onTopicClick(topic.first)
+                    onSubtopicClick(subtopic.first)
                 }
             )
         }
@@ -70,40 +86,6 @@ fun TopicSelectionScreen(
             }
 
             Spacer(modifier = Modifier.height(24.dp))
-        }
-    }
-}
-
-@Composable
-fun SelectionCard(
-    title: String,
-    subtitle: String,
-    onClick: () -> Unit
-) {
-    Card(
-        onClick = onClick,
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(22.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(22.dp)
-        ) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold
-            )
-
-            Spacer(modifier = Modifier.height(6.dp))
-
-            Text(
-                text = subtitle,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
         }
     }
 }
