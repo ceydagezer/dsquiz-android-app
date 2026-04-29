@@ -23,7 +23,6 @@ fun SubtopicSelectionScreen(
             "Sorting" to "Bubble, selection, insertion and merge sort",
             "Searching" to "Linear search and binary search",
             "Recursion" to "Recursive logic and base cases",
-            "Complexity" to "Big-O notation and algorithm analysis"
         )
     } else {
         listOf(
