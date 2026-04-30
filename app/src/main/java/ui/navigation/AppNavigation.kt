@@ -73,6 +73,7 @@ fun AppNavigation(
                 }
             )
         }
+
         composable(
             route = "subtopic_selection/{category}",
             arguments = listOf(
@@ -101,6 +102,9 @@ fun AppNavigation(
             val topic = backStackEntry.arguments?.getString("topic") ?: "Mixed"
 
             DifficultySelectionScreen(
+                onMixedDifficultyClick = {
+                    navController.navigate("quiz/$topic/Mixed")
+                },
                 onEasyClick = {
                     navController.navigate("quiz/$topic/Easy")
                 },
@@ -124,7 +128,7 @@ fun AppNavigation(
             )
         ) { backStackEntry ->
             val topic = backStackEntry.arguments?.getString("topic") ?: "Mixed"
-            val difficulty = backStackEntry.arguments?.getString("difficulty") ?: "Easy"
+            val difficulty = backStackEntry.arguments?.getString("difficulty") ?: "Mixed"
 
             QuizScreen(
                 topic = topic,
@@ -149,7 +153,7 @@ fun AppNavigation(
             val score = backStackEntry.arguments?.getInt("score") ?: 0
             val totalQuestions = backStackEntry.arguments?.getInt("totalQuestions") ?: 0
             val topic = backStackEntry.arguments?.getString("topic") ?: "Mixed"
-            val difficulty = backStackEntry.arguments?.getString("difficulty") ?: "Easy"
+            val difficulty = backStackEntry.arguments?.getString("difficulty") ?: "Mixed"
 
             ResultScreen(
                 score = score,

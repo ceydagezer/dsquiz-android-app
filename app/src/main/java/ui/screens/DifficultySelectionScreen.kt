@@ -12,6 +12,7 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun DifficultySelectionScreen(
+    onMixedDifficultyClick: () -> Unit = {},
     onEasyClick: () -> Unit = {},
     onMediumClick: () -> Unit = {},
     onHardClick: () -> Unit = {},
@@ -39,6 +40,14 @@ fun DifficultySelectionScreen(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(top = 8.dp, bottom = 32.dp)
         )
+
+        SelectionCard(
+            title = "Mixed Difficulty",
+            subtitle = "All difficulty levels mixed together",
+            onClick = onMixedDifficultyClick
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
 
         SelectionCard(
             title = "Easy",

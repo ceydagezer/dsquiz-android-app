@@ -21,11 +21,39 @@ fun QuizScreen(
 ) {
     val questions: List<Question> = remember(topic, difficulty) {
         val filteredQuestions =
-            if (topic == "Mixed") {
-                QuestionRepository.questions.filter { it.difficulty == difficulty }
-            } else {
-                QuestionRepository.questions.filter {
-                    it.topic == topic && it.difficulty == difficulty
+            when (topic) {
+                "Mixed" -> {
+                    QuestionRepository.questions.filter {
+                        it.difficulty == difficulty
+                    }
+                }
+
+                "Algorithms" -> {
+                    QuestionRepository.questions.filter {
+                        it.topic in listOf("Sorting", "Searching", "Recursion") &&
+                                it.difficulty == difficulty
+                    }
+                }
+
+                "Data Structures" -> {
+                    QuestionRepository.questions.filter {
+                        it.topic in listOf(
+                            "Arrays",
+                            "Linked Lists",
+                            "Stacks",
+                            "Queues",
+                            "Trees",
+                            "Graphs"
+                        ) &&
+                                it.difficulty == difficulty
+                    }
+                }
+
+                else -> {
+                    QuestionRepository.questions.filter {
+                        it.topic == topic &&
+                                it.difficulty == difficulty
+                    }
                 }
             }
 
@@ -48,11 +76,11 @@ fun QuizScreen(
         return
     }
 
-    var currentQuestionIndex by remember { mutableStateOf(0) }
-    var selectedAnswerIndex by remember { mutableStateOf<Int?>(null) }
-    var isAnswerChecked by remember { mutableStateOf(false) }
-    var showExplanation by remember { mutableStateOf(false) }
-    var score by remember { mutableStateOf(0) }
+    var currentQuestionIndex by remember(topic, difficulty) { mutableStateOf(0) }
+    var selectedAnswerIndex by remember(topic, difficulty) { mutableStateOf<Int?>(null) }
+    var isAnswerChecked by remember(topic, difficulty) { mutableStateOf(false) }
+    var showExplanation by remember(topic, difficulty) { mutableStateOf(false) }
+    var score by remember(topic, difficulty) { mutableStateOf(0) }
 
     val question = questions[currentQuestionIndex]
 
@@ -95,7 +123,9 @@ fun QuizScreen(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 LinearProgressIndicator(
-                    progress = (currentQuestionIndex + 1).toFloat() / questions.size.toFloat(),
+                    progress = {
+                        (currentQuestionIndex + 1).toFloat() / questions.size.toFloat()
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(6.dp),
@@ -130,14 +160,15 @@ fun QuizScreen(
                     MaterialTheme.colorScheme.surfaceVariant
             }
 
-            val contentColor = if (
-                isAnswerChecked &&
-                (index == question.correctAnswerIndex || index == selectedAnswerIndex)
-            ) {
-                Color.White
-            } else {
-                MaterialTheme.colorScheme.onSurfaceVariant
-            }
+            val contentColor =
+                if (
+                    isAnswerChecked &&
+                    (index == question.correctAnswerIndex || index == selectedAnswerIndex)
+                ) {
+                    Color.White
+                } else {
+                    MaterialTheme.colorScheme.onSurfaceVariant
+                }
 
             Button(
                 onClick = {
