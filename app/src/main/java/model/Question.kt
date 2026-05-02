@@ -7,5 +7,6 @@ data class Question(
     val correctAnswerIndex: Int,
     val explanation: String,
     val topic: String,
+    val category: String,
     val difficulty: String
 )

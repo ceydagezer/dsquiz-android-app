@@ -17,45 +17,26 @@ import com.example.myapplication.model.Question
 fun QuizScreen(
     topic: String,
     difficulty: String,
+    onBackClick: () -> Unit = {},
     onQuizFinished: (Int, Int, String, String) -> Unit = { _, _, _, _ -> }
 ) {
     val questions: List<Question> = remember(topic, difficulty) {
-        val filteredQuestions =
-            when (topic) {
-                "Mixed" -> {
-                    QuestionRepository.questions.filter {
-                        it.difficulty == difficulty
-                    }
-                }
+        val filteredQuestions = QuestionRepository.questions.filter { question ->
 
-                "Algorithms" -> {
-                    QuestionRepository.questions.filter {
-                        it.topic in listOf("Sorting", "Searching", "Recursion") &&
-                                it.difficulty == difficulty
-                    }
-                }
-
-                "Data Structures" -> {
-                    QuestionRepository.questions.filter {
-                        it.topic in listOf(
-                            "Arrays",
-                            "Linked Lists",
-                            "Stacks",
-                            "Queues",
-                            "Trees",
-                            "Graphs"
-                        ) &&
-                                it.difficulty == difficulty
-                    }
-                }
-
-                else -> {
-                    QuestionRepository.questions.filter {
-                        it.topic == topic &&
-                                it.difficulty == difficulty
-                    }
-                }
+            val matchesTopic = when (topic) {
+                "Data Structures" -> question.category == "Data Structures"
+                "Algorithms" -> question.category == "Algorithms"
+                "Mixed" -> true
+                else -> question.topic == topic
             }
+
+            val matchesDifficulty = when (difficulty) {
+                "Mixed" -> true
+                else -> question.difficulty == difficulty
+            }
+
+            matchesTopic && matchesDifficulty
+        }
 
         filteredQuestions.shuffled()
     }
@@ -81,8 +62,15 @@ fun QuizScreen(
     var isAnswerChecked by remember(topic, difficulty) { mutableStateOf(false) }
     var showExplanation by remember(topic, difficulty) { mutableStateOf(false) }
     var score by remember(topic, difficulty) { mutableStateOf(0) }
+    var showExitDialog by remember { mutableStateOf(false) }
 
     val question = questions[currentQuestionIndex]
+
+    val displayDifficulty = if (difficulty == "Mixed") {
+        "Mixed Difficulty"
+    } else {
+        difficulty
+    }
 
     Column(
         modifier = Modifier
@@ -100,11 +88,25 @@ fun QuizScreen(
         )
 
         Text(
-            text = "$topic • $difficulty",
+            text = "$topic • $displayDifficulty",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(top = 4.dp, bottom = 24.dp)
+            modifier = Modifier.padding(top = 4.dp, bottom = 12.dp)
         )
+
+        OutlinedButton(
+            onClick = {
+                showExitDialog = true
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp),
+            shape = RoundedCornerShape(16.dp)
+        ) {
+            Text("Back")
+        }
+
+        Spacer(modifier = Modifier.height(20.dp))
 
         Card(
             modifier = Modifier.fillMaxWidth(),
@@ -274,5 +276,38 @@ fun QuizScreen(
                 )
             }
         }
+    }
+
+    if (showExitDialog) {
+        AlertDialog(
+            onDismissRequest = {
+                showExitDialog = false
+            },
+            title = {
+                Text("Leave quiz?")
+            },
+            text = {
+                Text("Your progress will not be saved.")
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showExitDialog = false
+                        onBackClick()
+                    }
+                ) {
+                    Text("Leave")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        showExitDialog = false
+                    }
+                ) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 }

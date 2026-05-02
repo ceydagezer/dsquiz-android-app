@@ -133,6 +133,9 @@ fun AppNavigation(
             QuizScreen(
                 topic = topic,
                 difficulty = difficulty,
+                onBackClick = {
+                    navController.popBackStack()
+                },
                 onQuizFinished = { score, totalQuestions, finishedTopic, finishedDifficulty ->
                     navController.navigate(
                         "result/$score/$totalQuestions/$finishedTopic/$finishedDifficulty"
