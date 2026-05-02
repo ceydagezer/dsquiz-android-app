@@ -2,7 +2,9 @@ package com.example.myapplication.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -64,7 +66,7 @@ fun QuizScreen(
     }
 
     var currentQuestionIndex by remember(topic, difficulty) { mutableStateOf(0) }
-    var selectedAnswerIndex by remember(topic, difficulty) { mutableStateOf<Int?>(null) }
+    var selectedAnswerOriginalIndex by remember(topic, difficulty) { mutableStateOf<Int?>(null) }
     var isAnswerChecked by remember(topic, difficulty) { mutableStateOf(false) }
     var showExplanation by remember(topic, difficulty) { mutableStateOf(false) }
     var score by remember(topic, difficulty) { mutableStateOf(0) }
@@ -72,6 +74,12 @@ fun QuizScreen(
     val wrongQuestions = remember(topic, difficulty) { mutableStateListOf<Question>() }
 
     val question = questions[currentQuestionIndex]
+
+    val shuffledOptions = remember(question.id) {
+        question.options.mapIndexed { index, option ->
+            index to option
+        }.shuffled()
+    }
 
     val displayDifficulty = if (difficulty == "Mixed") {
         "Mixed Difficulty"
@@ -83,8 +91,9 @@ fun QuizScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
+            .verticalScroll(rememberScrollState())
             .padding(24.dp),
-        verticalArrangement = Arrangement.Center
+        verticalArrangement = Arrangement.Top
     ) {
 
         Row(
@@ -154,15 +163,17 @@ fun QuizScreen(
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        question.options.forEachIndexed { index, option ->
+        shuffledOptions.forEach { optionPair ->
+            val originalIndex = optionPair.first
+            val option = optionPair.second
 
             val containerColor = when {
-                isAnswerChecked && index == question.correctAnswerIndex ->
+                isAnswerChecked && originalIndex == question.correctAnswerIndex ->
                     Color(0xFF4CAF50)
 
                 isAnswerChecked &&
-                        index == selectedAnswerIndex &&
-                        index != question.correctAnswerIndex ->
+                        originalIndex == selectedAnswerOriginalIndex &&
+                        originalIndex != question.correctAnswerIndex ->
                     Color(0xFFF44336)
 
                 else ->
@@ -172,7 +183,8 @@ fun QuizScreen(
             val contentColor =
                 if (
                     isAnswerChecked &&
-                    (index == question.correctAnswerIndex || index == selectedAnswerIndex)
+                    (originalIndex == question.correctAnswerIndex ||
+                            originalIndex == selectedAnswerOriginalIndex)
                 ) {
                     Color.White
                 } else {
@@ -182,10 +194,10 @@ fun QuizScreen(
             Button(
                 onClick = {
                     if (!isAnswerChecked) {
-                        selectedAnswerIndex = index
+                        selectedAnswerOriginalIndex = originalIndex
                         isAnswerChecked = true
 
-                        if (index == question.correctAnswerIndex) {
+                        if (originalIndex == question.correctAnswerIndex) {
                             score++
                         } else {
                             if (!wrongQuestions.contains(question)) {
@@ -208,10 +220,10 @@ fun QuizScreen(
             }
         }
 
-        if (isAnswerChecked && selectedAnswerIndex != null) {
+        if (isAnswerChecked && selectedAnswerOriginalIndex != null) {
             Spacer(modifier = Modifier.height(20.dp))
 
-            val isCorrect = selectedAnswerIndex == question.correctAnswerIndex
+            val isCorrect = selectedAnswerOriginalIndex == question.correctAnswerIndex
 
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -266,7 +278,7 @@ fun QuizScreen(
                 onClick = {
                     if (currentQuestionIndex < questions.lastIndex) {
                         currentQuestionIndex++
-                        selectedAnswerIndex = null
+                        selectedAnswerOriginalIndex = null
                         isAnswerChecked = false
                         showExplanation = false
                     } else {
@@ -287,6 +299,8 @@ fun QuizScreen(
                     }
                 )
             }
+
+            Spacer(modifier = Modifier.height(24.dp))
         }
     }
 
