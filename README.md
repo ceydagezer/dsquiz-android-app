@@ -1,12 +1,12 @@
 ``` 
-# 📚 Algorithms & Data Structures Quiz App (Android)
+ 📚 Algorithms & Data Structures Quiz App (Android)
 
 An interactive Android quiz application designed to help students practice **Algorithms and Data Structures** with categorized topics, difficulty levels, explanations, and progress tracking.
 
 Built using **Kotlin + Jetpack Compose** 🚀
 
 
-## ✨ Features
+ ✨ Features
 
 ### 📊 Quiz Modes
 
@@ -89,6 +89,7 @@ Includes structured questions from:
 ## 📸 Screenshots
 ``` 
 <p align="center"> <img src="https://github.com/user-attachments/assets/3d50f076-ae77-4ac7-af19-d52422c01bd7" width="230"/> <img src="https://github.com/user-attachments/assets/af88c92a-694e-4079-9668-6d7c3bc6fb6d" width="230"/> <img src="https://github.com/user-attachments/assets/bdfdf2c7-26ab-440d-9625-6295c43502df" width="230"/> <img src="https://github.com/user-attachments/assets/85dc9e17-9c0a-40bf-a60c-1dddecc3d116" width="230"/> </p>
+
 ``` 
 ## 🎓 Project Purpose
 
