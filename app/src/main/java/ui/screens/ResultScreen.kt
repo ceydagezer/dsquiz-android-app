@@ -8,11 +8,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.myapplication.data.ScoreHistoryItem
 import com.example.myapplication.data.ScoreHistoryManager
-import androidx.compose.ui.platform.LocalContext
+import com.example.myapplication.data.WrongAnswerManager
 
 @Composable
 fun ResultScreen(
@@ -21,7 +22,8 @@ fun ResultScreen(
     topic: String,
     difficulty: String,
     onBackToHomeClick: () -> Unit = {},
-    onRetryClick: () -> Unit = {}
+    onRetryClick: () -> Unit = {},
+    onRetryWrongAnswersClick: () -> Unit = {}
 ) {
     val context = LocalContext.current
 
@@ -51,6 +53,14 @@ fun ResultScreen(
         else -> "Keep practicing 📚"
     }
 
+    val displayDifficulty = if (difficulty == "Mixed") {
+        "Mixed Difficulty"
+    } else {
+        difficulty
+    }
+
+    val hasWrongAnswers = WrongAnswerManager.wrongQuestions.isNotEmpty()
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -68,7 +78,7 @@ fun ResultScreen(
         )
 
         Text(
-            text = "$topic • $difficulty",
+            text = "$topic • $displayDifficulty",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(top = 6.dp, bottom = 28.dp)
@@ -129,6 +139,20 @@ fun ResultScreen(
             )
         ) {
             Text("Retry Quiz")
+        }
+
+        if (hasWrongAnswers) {
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Button(
+                onClick = onRetryWrongAnswersClick,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp),
+                shape = RoundedCornerShape(18.dp)
+            ) {
+                Text("Retry Wrong Answers")
+            }
         }
 
         Spacer(modifier = Modifier.height(12.dp))

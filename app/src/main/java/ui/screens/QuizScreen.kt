@@ -11,6 +11,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.myapplication.data.QuestionRepository
+import com.example.myapplication.data.WrongAnswerManager
 import com.example.myapplication.model.Question
 
 @Composable
@@ -27,6 +28,7 @@ fun QuizScreen(
                 "Data Structures" -> question.category == "Data Structures"
                 "Algorithms" -> question.category == "Algorithms"
                 "Mixed" -> true
+                "Wrong Answers" -> true
                 else -> question.topic == topic
             }
 
@@ -38,7 +40,11 @@ fun QuizScreen(
             matchesTopic && matchesDifficulty
         }
 
-        filteredQuestions.shuffled()
+        if (topic == "Wrong Answers") {
+            WrongAnswerManager.wrongQuestions.shuffled()
+        } else {
+            filteredQuestions.shuffled()
+        }
     }
 
     if (questions.isEmpty()) {
@@ -63,6 +69,7 @@ fun QuizScreen(
     var showExplanation by remember(topic, difficulty) { mutableStateOf(false) }
     var score by remember(topic, difficulty) { mutableStateOf(0) }
     var showExitDialog by remember { mutableStateOf(false) }
+    val wrongQuestions = remember(topic, difficulty) { mutableStateListOf<Question>() }
 
     val question = questions[currentQuestionIndex]
 
@@ -80,12 +87,26 @@ fun QuizScreen(
         verticalArrangement = Arrangement.Center
     ) {
 
-        Text(
-            text = "Quiz",
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onBackground
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Quiz",
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onBackground
+            )
+
+            TextButton(
+                onClick = {
+                    showExitDialog = true
+                }
+            ) {
+                Text("Back")
+            }
+        }
 
         Text(
             text = "$topic • $displayDifficulty",
@@ -93,20 +114,6 @@ fun QuizScreen(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(top = 4.dp, bottom = 12.dp)
         )
-
-        OutlinedButton(
-            onClick = {
-                showExitDialog = true
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(48.dp),
-            shape = RoundedCornerShape(16.dp)
-        ) {
-            Text("Back")
-        }
-
-        Spacer(modifier = Modifier.height(20.dp))
 
         Card(
             modifier = Modifier.fillMaxWidth(),
@@ -180,6 +187,10 @@ fun QuizScreen(
 
                         if (index == question.correctAnswerIndex) {
                             score++
+                        } else {
+                            if (!wrongQuestions.contains(question)) {
+                                wrongQuestions.add(question)
+                            }
                         }
                     }
                 },
@@ -259,6 +270,7 @@ fun QuizScreen(
                         isAnswerChecked = false
                         showExplanation = false
                     } else {
+                        WrongAnswerManager.saveWrongQuestions(wrongQuestions.toList())
                         onQuizFinished(score, questions.size, topic, difficulty)
                     }
                 },

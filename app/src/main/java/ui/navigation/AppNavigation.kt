@@ -170,6 +170,9 @@ fun AppNavigation(
                 },
                 onRetryClick = {
                     navController.navigate("quiz/$topic/$difficulty")
+                },
+                onRetryWrongAnswersClick = {
+                    navController.navigate("quiz/Wrong Answers/Mixed")
                 }
             )
         }

@@ -9,6 +9,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.myapplication.data.ScoreHistoryItem
@@ -103,6 +104,18 @@ fun HistoryScreen(
                         0
                     }
 
+                    val percentageColor = when {
+                        percentage >= 80 -> Color(0xFF4CAF50)
+                        percentage >= 50 -> Color(0xFFFF9800)
+                        else -> Color(0xFFF44336)
+                    }
+
+                    val displayDifficulty = if (item.difficulty == "Mixed") {
+                        "Mixed Difficulty"
+                    } else {
+                        item.difficulty
+                    }
+
                     val formattedDate = SimpleDateFormat(
                         "dd MMM yyyy, HH:mm",
                         Locale.getDefault()
@@ -129,7 +142,7 @@ fun HistoryScreen(
                             Spacer(modifier = Modifier.height(6.dp))
 
                             Text(
-                                text = "Difficulty: ${item.difficulty}",
+                                text = "Difficulty: $displayDifficulty",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -137,7 +150,8 @@ fun HistoryScreen(
                             Text(
                                 text = "Score: ${item.score}/${item.totalQuestions} ($percentage%)",
                                 style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                fontWeight = FontWeight.SemiBold,
+                                color = percentageColor
                             )
 
                             Spacer(modifier = Modifier.height(6.dp))
