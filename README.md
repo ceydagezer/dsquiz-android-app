@@ -6,9 +6,9 @@ An interactive Android quiz application designed to help students practice **Alg
 Built using **Kotlin + Jetpack Compose** 🚀
 
 
- ✨ Features
+ Features:
 
-### 📊 Quiz Modes
+ 📊 Quiz Modes
 
 - Data Structures category quiz
 - Algorithms category quiz
@@ -25,7 +25,7 @@ Built using **Kotlin + Jetpack Compose** 🚀
 - Mixed-topic quiz mode
 
 
-### 🎯 Difficulty Options
+ 🎯 Difficulty Options
 
 - Easy
 - Medium
@@ -33,7 +33,7 @@ Built using **Kotlin + Jetpack Compose** 🚀
 - Mixed Difficulty Mode
 
 
-### 🧠 Learning Support
+ 🧠 Learning Support
 
 - Explanation after each question
 - Retry Wrong Answers mode
@@ -41,7 +41,7 @@ Built using **Kotlin + Jetpack Compose** 🚀
 - Performance feedback after quiz completion
 
 
-### 📈 Progress Tracking
+ 📈 Progress Tracking
 
 - Score calculation
 - Percentage result display
@@ -50,7 +50,7 @@ Built using **Kotlin + Jetpack Compose** 🚀
 - Color-highlighted success levels in history screen
 
 
-### 🎨 User Experience
+ 🎨 User Experience
 
 - Dark mode support 🌙
 - Progress indicator during quiz
@@ -59,7 +59,7 @@ Built using **Kotlin + Jetpack Compose** 🚀
 - Smooth navigation between screens
 
 
-## 🧩 Question Bank
+ 🧩 Question Bank
 
 Includes structured questions from:
 
@@ -73,10 +73,10 @@ Includes structured questions from:
 - Searching Algorithms
 - Recursion
 
-📊 **Total questions: 90**
+📊 Total questions: 90
 
 
-## 🛠️ Technologies Used
+ 🛠️ Technologies Used
 
 - Kotlin
 - Jetpack Compose
@@ -86,12 +86,12 @@ Includes structured questions from:
 - Compose State Management
   ```
 ``` 
-## 📸 Screenshots
+📸 Screenshots
 ``` 
 <p align="center"> <img src="https://github.com/user-attachments/assets/3d50f076-ae77-4ac7-af19-d52422c01bd7" width="230"/> <img src="https://github.com/user-attachments/assets/af88c92a-694e-4079-9668-6d7c3bc6fb6d" width="230"/> <img src="https://github.com/user-attachments/assets/bdfdf2c7-26ab-440d-9625-6295c43502df" width="230"/> <img src="https://github.com/user-attachments/assets/85dc9e17-9c0a-40bf-a60c-1dddecc3d116" width="230"/> </p>
 
 ``` 
-## 🎓 Project Purpose
+🎓 Project Purpose
 
 This project was developed as part of an Android programming assignment to demonstrate:
 
