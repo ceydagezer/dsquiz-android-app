@@ -1,11 +1,13 @@
 package com.example.myapplication.data
 
 import android.content.Context
-import androidx.compose.runtime.mutableStateListOf
-import org.json.JSONArray
-import org.json.JSONObject
+import androidx.room.Entity
+import androidx.room.PrimaryKey
+import kotlinx.coroutines.flow.Flow
 
+@Entity(tableName = "score_history")
 data class ScoreHistoryItem(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val score: Int,
     val totalQuestions: Int,
     val topic: String,
@@ -15,83 +17,18 @@ data class ScoreHistoryItem(
 
 object ScoreHistoryManager {
 
-    val history = mutableStateListOf<ScoreHistoryItem>()
+    private const val MAX_HISTORY_SIZE = 20
 
-    private const val PREF_NAME = "score_history_pref"
-    private const val HISTORY_KEY = "history_list"
+    fun history(context: Context): Flow<List<ScoreHistoryItem>> =
+        AppDatabase.getInstance(context).scoreHistoryDao().getAll()
 
-    fun loadHistory(context: Context) {
-        history.clear()
-
-        val sharedPreferences =
-            context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
-
-        val jsonString =
-            sharedPreferences.getString(HISTORY_KEY, null) ?: return
-
-        try {
-            val jsonArray = JSONArray(jsonString)
-
-            for (i in 0 until jsonArray.length()) {
-                val item = jsonArray.getJSONObject(i)
-
-                history.add(
-                    ScoreHistoryItem(
-                        score = item.getInt("score"),
-                        totalQuestions = item.getInt("totalQuestions"),
-                        topic = item.getString("topic"),
-                        difficulty = item.getString("difficulty"),
-                        timestamp = item.optLong("timestamp", System.currentTimeMillis())
-                    )
-                )
-            }
-        } catch (e: org.json.JSONException) {
-            // Corrupted history data — start fresh rather than crashing on launch.
-            history.clear()
-        }
+    suspend fun addResult(context: Context, item: ScoreHistoryItem) {
+        val dao = AppDatabase.getInstance(context).scoreHistoryDao()
+        dao.insert(item)
+        dao.trimTo(MAX_HISTORY_SIZE)
     }
 
-    fun addResult(context: Context, item: ScoreHistoryItem) {
-        history.add(0, item)
-
-        if (history.size > 20) {
-            history.removeAt(history.lastIndex)
-        }
-
-        saveHistory(context)
-    }
-
-    fun clearHistory(context: Context) {
-        history.clear()
-
-        val sharedPreferences =
-            context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
-
-        sharedPreferences.edit()
-            .remove(HISTORY_KEY)
-            .apply()
-    }
-
-    private fun saveHistory(context: Context) {
-        val jsonArray = JSONArray()
-
-        history.forEach {
-            val jsonObject = JSONObject()
-
-            jsonObject.put("score", it.score)
-            jsonObject.put("totalQuestions", it.totalQuestions)
-            jsonObject.put("topic", it.topic)
-            jsonObject.put("difficulty", it.difficulty)
-            jsonObject.put("timestamp", it.timestamp)
-
-            jsonArray.put(jsonObject)
-        }
-
-        val sharedPreferences =
-            context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
-
-        sharedPreferences.edit()
-            .putString(HISTORY_KEY, jsonArray.toString())
-            .apply()
+    suspend fun clearHistory(context: Context) {
+        AppDatabase.getInstance(context).scoreHistoryDao().clearAll()
     }
 }

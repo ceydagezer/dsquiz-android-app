@@ -1,7 +1,9 @@
 package com.example.myapplication.ui.navigation
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -9,6 +11,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.myapplication.data.ScoreHistoryManager
+import kotlinx.coroutines.launch
 import com.example.myapplication.ui.screens.DifficultySelectionScreen
 import com.example.myapplication.ui.screens.HistoryScreen
 import com.example.myapplication.ui.screens.HomeScreen
@@ -25,10 +28,6 @@ fun AppNavigation(
 ) {
     val navController = rememberNavController()
     val context = LocalContext.current
-
-    LaunchedEffect(Unit) {
-        ScoreHistoryManager.loadHistory(context)
-    }
 
     NavHost(
         navController = navController,
@@ -187,13 +186,18 @@ fun AppNavigation(
         }
 
         composable("history") {
+            val historyList by ScoreHistoryManager.history(context).collectAsState(initial = emptyList())
+            val coroutineScope = rememberCoroutineScope()
+
             HistoryScreen(
-                historyList = ScoreHistoryManager.history,
+                historyList = historyList,
                 onBackClick = {
                     navController.popBackStack()
                 },
                 onClearHistoryClick = {
-                    ScoreHistoryManager.clearHistory(context)
+                    coroutineScope.launch {
+                        ScoreHistoryManager.clearHistory(context)
+                    }
                 }
             )
         }

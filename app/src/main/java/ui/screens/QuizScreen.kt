@@ -25,6 +25,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.myapplication.data.QuestionRepository
@@ -33,6 +34,7 @@ import com.example.myapplication.model.Question
 import com.example.myapplication.ui.components.AppTopBar
 import com.example.myapplication.ui.components.ExplanationOverlay
 import com.example.myapplication.ui.theme.extendedColors
+import kotlinx.coroutines.launch
 
 @Composable
 fun QuizScreen(
@@ -41,7 +43,12 @@ fun QuizScreen(
     onBackClick: () -> Unit = {},
     onQuizFinished: (Int, Int, String, String) -> Unit = { _, _, _, _ -> }
 ) {
-    val questions: List<Question> = remember(topic, difficulty) {
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+
+    var questions by remember(topic, difficulty) { mutableStateOf<List<Question>?>(null) }
+
+    LaunchedEffect(topic, difficulty) {
         val filteredQuestions = QuestionRepository.questions.filter { question ->
 
             val matchesTopic = when (topic) {
@@ -61,15 +68,30 @@ fun QuizScreen(
         }
 
         val pool = if (topic == "Wrong Answers") {
-            WrongAnswerManager.wrongQuestions
+            val wrongIds = WrongAnswerManager.wrongQuestionIds(context).toSet()
+            QuestionRepository.questions.filter { it.id in wrongIds }
         } else {
             filteredQuestions
         }
 
-        pool.shuffled().take(QuestionRepository.QUIZ_LENGTH)
+        questions = pool.shuffled().take(QuestionRepository.QUIZ_LENGTH)
     }
 
-    if (questions.isEmpty()) {
+    val loadedQuestions = questions
+
+    if (loadedQuestions == null) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator()
+        }
+        return
+    }
+
+    if (loadedQuestions.isEmpty()) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -93,7 +115,7 @@ fun QuizScreen(
     var showExitDialog by remember { mutableStateOf(false) }
     val wrongQuestions = remember(topic, difficulty) { mutableStateListOf<Question>() }
 
-    val question = questions[currentQuestionIndex]
+    val question = loadedQuestions[currentQuestionIndex]
 
     val shuffledOptions = remember(question.id) {
         question.options.mapIndexed { index, option ->
@@ -136,7 +158,7 @@ fun QuizScreen(
         ) {
 
             Text(
-                text = "Question ${currentQuestionIndex + 1} of ${questions.size}",
+                text = "Question ${currentQuestionIndex + 1} of ${loadedQuestions.size}",
                 style = MaterialTheme.typography.titleSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -144,7 +166,7 @@ fun QuizScreen(
             Spacer(modifier = Modifier.height(8.dp))
 
             val animatedProgress by animateFloatAsState(
-                targetValue = (currentQuestionIndex + 1).toFloat() / questions.size.toFloat(),
+                targetValue = (currentQuestionIndex + 1).toFloat() / loadedQuestions.size.toFloat(),
                 label = "quizProgress"
             )
 
@@ -297,14 +319,19 @@ fun QuizScreen(
 
                     Button(
                         onClick = {
-                            if (currentQuestionIndex < questions.lastIndex) {
+                            if (currentQuestionIndex < loadedQuestions.lastIndex) {
                                 currentQuestionIndex++
                                 selectedAnswerOriginalIndex = null
                                 isAnswerChecked = false
                                 showExplanationOverlay = false
                             } else {
-                                WrongAnswerManager.saveWrongQuestions(wrongQuestions.toList())
-                                onQuizFinished(score, questions.size, topic, difficulty)
+                                coroutineScope.launch {
+                                    WrongAnswerManager.saveWrongQuestionIds(
+                                        context,
+                                        wrongQuestions.map { it.id }
+                                    )
+                                    onQuizFinished(score, loadedQuestions.size, topic, difficulty)
+                                }
                             }
                         },
                         modifier = Modifier
@@ -313,7 +340,7 @@ fun QuizScreen(
                         shape = RoundedCornerShape(18.dp)
                     ) {
                         Text(
-                            text = if (currentQuestionIndex < questions.lastIndex) "Next Question" else "See Result"
+                            text = if (currentQuestionIndex < loadedQuestions.lastIndex) "Next Question" else "See Result"
                         )
                     }
 
