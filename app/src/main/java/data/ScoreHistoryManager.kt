@@ -29,20 +29,25 @@ object ScoreHistoryManager {
         val jsonString =
             sharedPreferences.getString(HISTORY_KEY, null) ?: return
 
-        val jsonArray = JSONArray(jsonString)
+        try {
+            val jsonArray = JSONArray(jsonString)
 
-        for (i in 0 until jsonArray.length()) {
-            val item = jsonArray.getJSONObject(i)
+            for (i in 0 until jsonArray.length()) {
+                val item = jsonArray.getJSONObject(i)
 
-            history.add(
-                ScoreHistoryItem(
-                    score = item.getInt("score"),
-                    totalQuestions = item.getInt("totalQuestions"),
-                    topic = item.getString("topic"),
-                    difficulty = item.getString("difficulty"),
-                    timestamp = item.optLong("timestamp", System.currentTimeMillis())
+                history.add(
+                    ScoreHistoryItem(
+                        score = item.getInt("score"),
+                        totalQuestions = item.getInt("totalQuestions"),
+                        topic = item.getString("topic"),
+                        difficulty = item.getString("difficulty"),
+                        timestamp = item.optLong("timestamp", System.currentTimeMillis())
+                    )
                 )
-            )
+            }
+        } catch (e: org.json.JSONException) {
+            // Corrupted history data — start fresh rather than crashing on launch.
+            history.clear()
         }
     }
 

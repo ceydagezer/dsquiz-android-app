@@ -1,15 +1,21 @@
 package com.example.myapplication.ui.screens
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.myapplication.ui.components.AppTopBar
+import com.example.myapplication.ui.components.IconTile
+import com.example.myapplication.ui.components.topicIcon
 
 @Composable
 fun TopicSelectionScreen(
@@ -21,61 +27,49 @@ fun TopicSelectionScreen(
         "Data Structures" to "Arrays, stacks, queues, trees and graphs"
     )
 
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .padding(24.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp)
-    ) {
-        item {
-            Spacer(modifier = Modifier.height(32.dp))
-
-            Text(
-                text = "Choose Topic",
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onBackground
-            )
-
-            Text(
-                text = "Select a category and start practicing.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(top = 8.dp, bottom = 18.dp)
-            )
+    Scaffold(
+        topBar = {
+            AppTopBar(title = "Choose Topic", onBackClick = onBackClick)
         }
+    ) { padding ->
 
-        items(topics) { topic ->
-            SelectionCard(
-                title = topic.first,
-                subtitle = topic.second,
-                onClick = {
-                    onTopicClick(topic.first)
-                }
-            )
-        }
-
-        item {
-            Spacer(modifier = Modifier.height(12.dp))
-
-            OutlinedButton(
-                onClick = onBackClick,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(52.dp),
-                shape = RoundedCornerShape(18.dp)
-            ) {
-                Text("Back")
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .padding(horizontal = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
+            item {
+                Text(
+                    text = "Select a category and start practicing.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 4.dp, bottom = 8.dp)
+                )
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            items(topics) { topic ->
+                SelectionCard(
+                    icon = topicIcon(topic.first),
+                    title = topic.first,
+                    subtitle = topic.second,
+                    onClick = {
+                        onTopicClick(topic.first)
+                    }
+                )
+            }
+
+            item {
+                Spacer(modifier = Modifier.height(12.dp))
+            }
         }
     }
 }
 
 @Composable
 fun SelectionCard(
+    icon: ImageVector? = null,
     title: String,
     subtitle: String,
     onClick: () -> Unit
@@ -84,25 +78,42 @@ fun SelectionCard(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(22.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        )
     ) {
-        Column(
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(22.dp)
+                .padding(18.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold
-            )
+            if (icon != null) {
+                IconTile(icon = icon)
+                Spacer(modifier = Modifier.width(16.dp))
+            }
 
-            Spacer(modifier = Modifier.height(6.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
 
-            Text(
-                text = subtitle,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                Spacer(modifier = Modifier.height(2.dp))
+
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
