@@ -1,20 +1,38 @@
 package com.example.myapplication.ui.screens
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.draw.clip
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Cancel
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.myapplication.data.QuestionRepository
 import com.example.myapplication.data.WrongAnswerManager
 import com.example.myapplication.model.Question
+import com.example.myapplication.ui.components.AppTopBar
+import com.example.myapplication.ui.components.ExplanationOverlay
+import com.example.myapplication.ui.theme.extendedColors
 
 @Composable
 fun QuizScreen(
@@ -42,11 +60,13 @@ fun QuizScreen(
             matchesTopic && matchesDifficulty
         }
 
-        if (topic == "Wrong Answers") {
-            WrongAnswerManager.wrongQuestions.shuffled()
+        val pool = if (topic == "Wrong Answers") {
+            WrongAnswerManager.wrongQuestions
         } else {
-            filteredQuestions.shuffled()
+            filteredQuestions
         }
+
+        pool.shuffled().take(QuestionRepository.QUIZ_LENGTH)
     }
 
     if (questions.isEmpty()) {
@@ -65,11 +85,11 @@ fun QuizScreen(
         return
     }
 
-    var currentQuestionIndex by remember(topic, difficulty) { mutableStateOf(0) }
+    var currentQuestionIndex by remember(topic, difficulty) { mutableIntStateOf(0) }
     var selectedAnswerOriginalIndex by remember(topic, difficulty) { mutableStateOf<Int?>(null) }
     var isAnswerChecked by remember(topic, difficulty) { mutableStateOf(false) }
-    var showExplanation by remember(topic, difficulty) { mutableStateOf(false) }
-    var score by remember(topic, difficulty) { mutableStateOf(0) }
+    var showExplanationOverlay by remember(topic, difficulty) { mutableStateOf(false) }
+    var score by remember(topic, difficulty) { mutableIntStateOf(0) }
     var showExitDialog by remember { mutableStateOf(false) }
     val wrongQuestions = remember(topic, difficulty) { mutableStateListOf<Question>() }
 
@@ -81,119 +101,133 @@ fun QuizScreen(
         }.shuffled()
     }
 
+    val optionLetters = listOf("A", "B", "C", "D", "E", "F")
+
     val displayDifficulty = if (difficulty == "Mixed") {
         "Mixed Difficulty"
     } else {
         difficulty
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .verticalScroll(rememberScrollState())
-            .padding(24.dp),
-        verticalArrangement = Arrangement.Top
-    ) {
+    Scaffold(
+        topBar = {
+            AppTopBar(
+                title = "$topic • $displayDifficulty",
+                actions = {
+                    TextButton(onClick = { showExitDialog = true }) {
+                        Icon(
+                            imageVector = Icons.Filled.Close,
+                            contentDescription = "Exit quiz",
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                }
+            )
+        }
+    ) { padding ->
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 24.dp),
+            verticalArrangement = Arrangement.Top
         ) {
+
             Text(
-                text = "Quiz",
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onBackground
+                text = "Question ${currentQuestionIndex + 1} of ${questions.size}",
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
-            TextButton(
-                onClick = {
-                    showExitDialog = true
-                }
-            ) {
-                Text("Back")
-            }
-        }
+            Spacer(modifier = Modifier.height(8.dp))
 
-        Text(
-            text = "$topic • $displayDifficulty",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(top = 4.dp, bottom = 12.dp)
-        )
+            val animatedProgress by animateFloatAsState(
+                targetValue = (currentQuestionIndex + 1).toFloat() / questions.size.toFloat(),
+                label = "quizProgress"
+            )
 
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(22.dp),
-            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-        ) {
-            Column(
-                modifier = Modifier.padding(20.dp)
-            ) {
-                Text(
-                    text = "Question ${currentQuestionIndex + 1} / ${questions.size}",
-                    style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+            LinearProgressIndicator(
+                progress = { animatedProgress },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(6.dp)
+                    .clip(RoundedCornerShape(3.dp)),
+                color = MaterialTheme.colorScheme.primary,
+                trackColor = MaterialTheme.colorScheme.surfaceVariant
+            )
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(22.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surface
                 )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                LinearProgressIndicator(
-                    progress = {
-                        (currentQuestionIndex + 1).toFloat() / questions.size.toFloat()
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(6.dp),
-                    color = MaterialTheme.colorScheme.primary,
-                    trackColor = MaterialTheme.colorScheme.surfaceVariant
-                )
-
-                Spacer(modifier = Modifier.height(20.dp))
-
+            ) {
                 Text(
                     text = question.questionText,
                     style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.SemiBold
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.padding(20.dp)
                 )
             }
-        }
 
-        Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(18.dp))
 
-        shuffledOptions.forEach { optionPair ->
-            val originalIndex = optionPair.first
-            val option = optionPair.second
+            val extended = MaterialTheme.extendedColors
 
-            val containerColor = when {
-                isAnswerChecked && originalIndex == question.correctAnswerIndex ->
-                    Color(0xFF4CAF50)
+            shuffledOptions.forEachIndexed { position, optionPair ->
+                val originalIndex = optionPair.first
+                val option = optionPair.second
 
-                isAnswerChecked &&
-                        originalIndex == selectedAnswerOriginalIndex &&
-                        originalIndex != question.correctAnswerIndex ->
-                    Color(0xFFF44336)
+                val isCorrectOption = originalIndex == question.correctAnswerIndex
+                val isSelectedOption = originalIndex == selectedAnswerOriginalIndex
 
-                else ->
-                    MaterialTheme.colorScheme.surfaceVariant
-            }
-
-            val contentColor =
-                if (
-                    isAnswerChecked &&
-                    (originalIndex == question.correctAnswerIndex ||
-                            originalIndex == selectedAnswerOriginalIndex)
-                ) {
-                    Color.White
-                } else {
-                    MaterialTheme.colorScheme.onSurfaceVariant
+                val containerColor = when {
+                    isAnswerChecked && isCorrectOption -> extended.successContainer
+                    isAnswerChecked && isSelectedOption && !isCorrectOption -> extended.errorContainer
+                    else -> MaterialTheme.colorScheme.surface
                 }
 
-            Button(
-                onClick = {
-                    if (!isAnswerChecked) {
+                val borderColor = when {
+                    isAnswerChecked && isCorrectOption -> extended.success
+                    isAnswerChecked && isSelectedOption && !isCorrectOption -> extended.error
+                    else -> Color.Transparent
+                }
+
+                val badgeColor = when {
+                    isAnswerChecked && isCorrectOption -> extended.success
+                    isAnswerChecked && isSelectedOption && !isCorrectOption -> extended.error
+                    else -> MaterialTheme.colorScheme.surfaceVariant
+                }
+
+                val badgeTextColor = when {
+                    isAnswerChecked && (isCorrectOption || isSelectedOption) -> Color.White
+                    else -> MaterialTheme.colorScheme.onSurfaceVariant
+                }
+
+                OptionRow(
+                    letter = optionLetters.getOrElse(position) { "" },
+                    text = option,
+                    containerColor = containerColor,
+                    borderColor = borderColor,
+                    badgeColor = badgeColor,
+                    badgeTextColor = badgeTextColor,
+                    trailingIcon = when {
+                        isAnswerChecked && isCorrectOption -> Icons.Filled.CheckCircle
+                        isAnswerChecked && isSelectedOption && !isCorrectOption -> Icons.Filled.Cancel
+                        else -> null
+                    },
+                    trailingIconTint = when {
+                        isAnswerChecked && isCorrectOption -> extended.success
+                        else -> extended.error
+                    },
+                    enabled = !isAnswerChecked,
+                    onClick = {
                         selectedAnswerOriginalIndex = originalIndex
                         isAnswerChecked = true
 
@@ -205,102 +239,87 @@ fun QuizScreen(
                             }
                         }
                     }
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 6.dp)
-                    .height(52.dp),
-                shape = RoundedCornerShape(18.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = containerColor,
-                    contentColor = contentColor
                 )
-            ) {
-                Text(option)
+
+                Spacer(modifier = Modifier.height(10.dp))
             }
-        }
 
-        if (isAnswerChecked && selectedAnswerOriginalIndex != null) {
-            Spacer(modifier = Modifier.height(20.dp))
-
-            val isCorrect = selectedAnswerOriginalIndex == question.correctAnswerIndex
-
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant
-                )
+            AnimatedVisibility(
+                visible = isAnswerChecked && selectedAnswerOriginalIndex != null,
+                enter = fadeIn() + expandVertically(),
+                exit = fadeOut() + shrinkVertically()
             ) {
-                Column(
-                    modifier = Modifier.padding(18.dp)
-                ) {
-                    Text(
-                        text = if (isCorrect) "Correct!" else "Wrong!",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                val isCorrect = selectedAnswerOriginalIndex == question.correctAnswerIndex
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                Column {
+                    Spacer(modifier = Modifier.height(10.dp))
 
-                    OutlinedButton(
-                        onClick = {
-                            showExplanation = !showExplanation
-                        },
+                    Card(
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(16.dp)
+                        shape = RoundedCornerShape(20.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = if (isCorrect) extended.successContainer else extended.errorContainer
+                        )
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(18.dp)
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = if (isCorrect) Icons.Filled.CheckCircle else Icons.Filled.Cancel,
+                                    contentDescription = null,
+                                    tint = if (isCorrect) extended.success else extended.error
+                                )
+
+                                Spacer(modifier = Modifier.width(8.dp))
+
+                                Text(
+                                    text = if (isCorrect) "Correct!" else "Wrong!",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (isCorrect) extended.success else extended.error
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            OutlinedButton(
+                                onClick = { showExplanationOverlay = true },
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(16.dp)
+                            ) {
+                                Text("Show Explanation")
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    Button(
+                        onClick = {
+                            if (currentQuestionIndex < questions.lastIndex) {
+                                currentQuestionIndex++
+                                selectedAnswerOriginalIndex = null
+                                isAnswerChecked = false
+                                showExplanationOverlay = false
+                            } else {
+                                WrongAnswerManager.saveWrongQuestions(wrongQuestions.toList())
+                                onQuizFinished(score, questions.size, topic, difficulty)
+                            }
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(52.dp),
+                        shape = RoundedCornerShape(18.dp)
                     ) {
                         Text(
-                            text = if (showExplanation) {
-                                "Hide Explanation"
-                            } else {
-                                "Show Explanation"
-                            }
+                            text = if (currentQuestionIndex < questions.lastIndex) "Next Question" else "See Result"
                         )
                     }
 
-                    if (showExplanation) {
-                        Spacer(modifier = Modifier.height(12.dp))
-
-                        Text(
-                            text = question.explanation,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
+                    Spacer(modifier = Modifier.height(24.dp))
                 }
             }
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            Button(
-                onClick = {
-                    if (currentQuestionIndex < questions.lastIndex) {
-                        currentQuestionIndex++
-                        selectedAnswerOriginalIndex = null
-                        isAnswerChecked = false
-                        showExplanation = false
-                    } else {
-                        WrongAnswerManager.saveWrongQuestions(wrongQuestions.toList())
-                        onQuizFinished(score, questions.size, topic, difficulty)
-                    }
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(52.dp),
-                shape = RoundedCornerShape(18.dp)
-            ) {
-                Text(
-                    text = if (currentQuestionIndex < questions.lastIndex) {
-                        "Next Question"
-                    } else {
-                        "See Result"
-                    }
-                )
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
         }
     }
 
@@ -335,5 +354,77 @@ fun QuizScreen(
                 }
             }
         )
+    }
+
+    if (showExplanationOverlay) {
+        ExplanationOverlay(
+            question = question,
+            optionOrder = shuffledOptions.map { it.first },
+            optionLetters = optionLetters,
+            selectedIndex = selectedAnswerOriginalIndex,
+            onClose = { showExplanationOverlay = false }
+        )
+    }
+}
+
+@Composable
+private fun OptionRow(
+    letter: String,
+    text: String,
+    containerColor: Color,
+    borderColor: Color,
+    badgeColor: Color,
+    badgeTextColor: Color,
+    trailingIcon: ImageVector?,
+    trailingIconTint: Color,
+    enabled: Boolean,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(18.dp))
+            .background(containerColor)
+            .border(1.5.dp, borderColor, RoundedCornerShape(18.dp))
+            .then(
+                if (enabled) {
+                    Modifier.clickable(onClick = onClick)
+                } else {
+                    Modifier
+                }
+            )
+            .padding(horizontal = 16.dp, vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(30.dp)
+                .background(badgeColor, CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = letter,
+                style = MaterialTheme.typography.labelLarge,
+                color = badgeTextColor
+            )
+        }
+
+        Spacer(modifier = Modifier.width(14.dp))
+
+        Text(
+            text = text,
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.weight(1f)
+        )
+
+        if (trailingIcon != null) {
+            Spacer(modifier = Modifier.width(8.dp))
+            Icon(
+                imageVector = trailingIcon,
+                contentDescription = null,
+                tint = trailingIconTint
+            )
+        }
     }
 }

@@ -36,8 +36,6 @@ fun AppNavigation(
     ) {
         composable("home") {
             HomeScreen(
-                isDarkMode = isDarkMode,
-                onThemeToggle = onThemeToggle,
                 onSettingsClick = {
                     navController.navigate("settings")
                 },
@@ -85,7 +83,14 @@ fun AppNavigation(
             SubtopicSelectionScreen(
                 category = category,
                 onSubtopicClick = { selectedSubtopic ->
-                    navController.navigate("difficulty_selection/$selectedSubtopic")
+                    if (selectedSubtopic == category) {
+                        // Whole-category pools are large enough to support difficulty filtering.
+                        navController.navigate("difficulty_selection/$selectedSubtopic")
+                    } else {
+                        // A single subtopic's pool is too small to split by difficulty,
+                        // so it always starts a mixed-difficulty quiz directly.
+                        navController.navigate("quiz/$selectedSubtopic/Mixed")
+                    }
                 },
                 onBackClick = {
                     navController.popBackStack()
@@ -169,17 +174,19 @@ fun AppNavigation(
                     }
                 },
                 onRetryClick = {
-                    navController.navigate("quiz/$topic/$difficulty")
+                    navController.navigate("quiz/$topic/$difficulty") {
+                        popUpTo("result/{score}/{totalQuestions}/{topic}/{difficulty}") { inclusive = true }
+                    }
                 },
                 onRetryWrongAnswersClick = {
-                    navController.navigate("quiz/Wrong Answers/Mixed")
+                    navController.navigate("quiz/Wrong Answers/Mixed") {
+                        popUpTo("result/{score}/{totalQuestions}/{topic}/{difficulty}") { inclusive = true }
+                    }
                 }
             )
         }
 
         composable("history") {
-            ScoreHistoryManager.loadHistory(context)
-
             HistoryScreen(
                 historyList = ScoreHistoryManager.history,
                 onBackClick = {
